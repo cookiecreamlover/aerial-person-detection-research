@@ -1,0 +1,17 @@
+name: aerial-person-detection
+channels:
+  - pytorch
+  - nvidia
+  - conda-forge
+dependencies:
+  - python=3.11
+  - pytorch
+  - torchvision
+  - numpy
+  - pillow
+  - opencv
+  - matplotlib
+  - pyyaml
+  - pip
+  - pip:
+      - ultralytics

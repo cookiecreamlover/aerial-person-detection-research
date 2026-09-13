@@ -1,0 +1,75 @@
+study:
+  title: Accuracy-latency trade-offs for aerial person detection under UAV deployment constraints
+  author: Saiyam Jain
+  affiliation: Department of Robotics and Artificial Intelligence, MIT ADT University
+  seed: 2026
+  task: one_class_person_detection
+  dataset: VisDrone2019-DET
+  primary_claim: feasibility_under_controlled_computational_and_image_domain_constraints
+  physical_uav_deployment_claim: false
+  do_not_claim_unmeasured_results: true
+  primary_result_type: real_rgb_evaluation
+  thermal_extension_status: not_part_of_primary_study
+models:
+  yolo_v8n:
+    implementation: ultralytics
+    initialization: yolov8n.pt
+    role: lightweight_one_stage_baseline
+  yolo_10n:
+    implementation: ultralytics
+    initialization: yolov10n.pt
+    role: nms_free_real_time_detector
+  faster_rcnn_resnet50_fpn:
+    implementation: torchvision
+    initialization: FasterRCNN_ResNet50_FPN_Weights.DEFAULT
+    role: two_stage_accuracy_oriented_baseline
+classes:
+  person:
+    source_classes: [pedestrian, people]
+data:
+  train_split: official_train
+  validation_split: official_val
+  test_split: official_test_dev
+  prevent_sequence_leakage: true
+  include_empty_images: true
+  image_size_primary: 1280
+  image_size_sensitivity: [640]
+  batch_size_deployment: 1
+  timing_warmup_frames: 20
+  timing_repeats: 100
+  timing_minimum_samples: 100
+threshold_selection:
+  source: validation_split
+  rule: maximize_f1
+  candidate_thresholds: [0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45, 0.50, 0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90, 0.95]
+  locked_before_test: true
+  tie_break: higher_threshold
+metrics:
+  accuracy: [precision, recall, f1, ap50, map50_95, false_positives_per_image, missed_person_rate]
+  efficiency: [parameters, trainable_parameters, checkpoint_size_mb, end_to_end_latency_ms, latency_std_ms, median_latency_ms, p95_latency_ms, fps, peak_memory_mb]
+  timing_scope: end_to_end_model_call_including_framework_preprocessing_and_postprocessing
+  component_timing: not_claimed_in_primary_experiment
+  ap_prediction_scope: all_raw_detections_ranked_by_confidence
+  uncertainty: [image_bootstrap_95_ci]
+  multi_seed_analysis: optional_external_repeated_training_runs
+evidence_layers:
+  aerial_accuracy:
+    evidence: real_labelled_visdrone_images
+    supports: detector_quality_on_aerial_imagery
+  hardware_feasibility:
+    evidence: declared_target_hardware_benchmark
+    supports: computational_feasibility_for_possible_embedded_use
+    recommended_target: Raspberry Pi 4 8GB or explicitly declared equivalent
+    benchmark_mode: CPU_only_unless_target_has_declared_accelerator
+  uav_pipeline:
+    evidence: recorded_aerial_sequence_and_simulated_flight_path
+    supports: pipeline_integration_demonstration_only
+operational_views:
+  realtime_rescue:
+    constraints: [recall_gte_0.80, end_to_end_latency_lte_100_ms]
+    decision: smallest_checkpoint_among_feasible_models
+  accuracy_first_mapping:
+    decision: highest_map50_95_with_costs_reported
+claims:
+  allowed: [works_on_labelled_aerial_imagery, measured_on_declared_hardware, simulated_uav_pipeline_operates]
+  prohibited: [deployed_on_physical_uav, achieved_fps_on_drone, field_validated_survivor_detection, safe_autonomous_flight]
