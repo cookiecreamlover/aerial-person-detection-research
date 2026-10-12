@@ -1,0 +1,7 @@
+# Copy to configs/visdrone_person.yaml and replace DATA_ROOT.
+# The converter writes images/train, images/val, labels/train, and labels/val.
+path: /ABSOLUTE/PATH/TO/aerial_person_detection_final/data/visdrone_person
+train: images/train
+val: images/val
+names:
+  0: person
